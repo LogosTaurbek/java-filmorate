@@ -23,6 +23,7 @@ public class FilmController {
     public List<Film> getAllFilms() {
         return this.filmService.getAllFilms();
     }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Film getFilmById(@PathVariable int id) {

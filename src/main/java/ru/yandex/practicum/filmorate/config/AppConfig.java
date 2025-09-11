@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AppConfig {
     private int defaultNumberOfTopFilms;
 
-    public int getDefaultNumberOfTopFilms () {
+    public int getDefaultNumberOfTopFilms() {
         return defaultNumberOfTopFilms;
     }
 }
