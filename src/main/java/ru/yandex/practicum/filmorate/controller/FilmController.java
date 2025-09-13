@@ -30,11 +30,6 @@ public class FilmController {
         return this.filmService.getFilmById(id);
     }
 
-    @GetMapping("/popular")
-    @ResponseStatus(HttpStatus.OK)
-    public List<Film> getTopLikedFilms(@RequestParam(required = false) int count) {
-        return this.filmService.getTopLikedFilms(count);
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -46,17 +41,5 @@ public class FilmController {
     @ResponseStatus(HttpStatus.OK)
     public Film updateFilm(@RequestBody Film updatedFilm) {
         return this.filmService.updateFilm(updatedFilm);
-    }
-
-    @PutMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void addLike(@PathVariable int userId, @PathVariable int id) {
-        this.filmService.addLike(userId, id);
-    }
-
-    @DeleteMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void removeLike(@PathVariable int userId, @PathVariable int id) {
-        this.filmService.removeLike(userId, id);
     }
 }
