@@ -18,10 +18,6 @@ public class UserService {
         return this.userStorage.getAllUsers();
     }
 
-    public User getUserById(int id) {
-        return this.userStorage.getUserById(id);
-    }
-
     public User createUser(User newUser) {
         return this.userStorage.createUser(newUser);
     }

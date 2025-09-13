@@ -41,14 +41,6 @@ public class InMemoryUserStorage implements UserStorage {
         return new ArrayList<>(this.users.values());
     }
 
-    public User getUserById(int id) throws NoSuchElementException {
-        User user = this.users.get(id);
-        if (user == null) {
-            throw new NoSuchElementException("Пользователя с id=" + id + " не существует");
-        }
-        return user;
-    }
-
     private int getNextId() {
         int nextId = this.getCurrentId() + 1;
         this.setCurrentId(nextId);

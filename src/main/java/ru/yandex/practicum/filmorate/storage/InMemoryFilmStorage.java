@@ -42,14 +42,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         return new ArrayList<>(this.films.values());
     }
 
-    public Film getFilmById(int id) throws NoSuchElementException {
-        Film film = this.films.get(id);
-        if (film == null) {
-            throw new NoSuchElementException("Фильма с id=" + id + " не существует.");
-        }
-        return film;
-    }
-
     private int getNextId() {
         int nextId = this.getCurrentId() + 1;
         this.setCurrentId(nextId);

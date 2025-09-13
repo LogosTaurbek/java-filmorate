@@ -21,10 +21,6 @@ public class FilmService {
         return this.filmStorage.getAllFilms();
     }
 
-    public Film getFilmById(int id) {
-        return this.filmStorage.getFilmById(id);
-    }
-
     public Film addFilm(Film newFilm) {
         return this.filmStorage.addFilm(newFilm);
     }

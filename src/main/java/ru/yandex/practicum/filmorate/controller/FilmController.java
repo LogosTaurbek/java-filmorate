@@ -24,13 +24,6 @@ public class FilmController {
         return this.filmService.getAllFilms();
     }
 
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public Film getFilmById(@PathVariable int id) {
-        return this.filmService.getFilmById(id);
-    }
-
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@RequestBody Film newFilm) {
