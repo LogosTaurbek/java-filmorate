@@ -30,9 +30,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
         if (!this.films.containsKey(updatedFilm.getId())) {
-            throw new NoSuchElementException(
-                    "Фильма с id=" + updatedFilm.getId() + " нет в системе."
-            );
+            throw new NoSuchElementException("Фильма с id=" + updatedFilm.getId() + " нет в системе.");
         }
         this.validateFilm(updatedFilm);
         this.films.put(updatedFilm.getId(), updatedFilm);
@@ -64,27 +62,17 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new FilmValidationException("Название фильма не может быть пустым.");
         }
         if (film.getDescription().length() > 200) {
-            log.error(
-                    "Длина описания фильма ({}) превышает 200 символов. {}",
-                    film.getDescription().length(),
-                    film
-            );
-            throw new FilmValidationException(
-                    "Максимальная длина описания фильма не может превышать 200 символов."
-            );
+            log.error("Длина описания фильма ({}) превышает 200 символов. {}", film.getDescription().length(), film);
+            throw new FilmValidationException("Максимальная длина описания фильма не может превышать 200 символов.");
         }
         LocalDate earliestReleaseDAte = LocalDate.of(1895, 12, 28);
         if (film.getReleaseDate().isBefore(earliestReleaseDAte)) {
             log.error("Указана нереалистичная дата релиза. {}", film);
-            throw new FilmValidationException(
-                    "Дата релиза не может быть раньше 28 декабря 1895 года."
-            );
+            throw new FilmValidationException("Дата релиза не может быть раньше 28 декабря 1895 года.");
         }
         if (film.getDuration() < 0) {
             log.error("Указана нереалистичная продолжительность фильма. {}", film);
-            throw new FilmValidationException(
-                    "Продолжительность фильма должна быть положительным числом."
-            );
+            throw new FilmValidationException("Продолжительность фильма должна быть положительным числом.");
         }
     }
 }
