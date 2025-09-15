@@ -24,7 +24,7 @@ public class FilmService {
         return this.filmStorage.getAllFilms();
     }
 
-    public Film addFilm( Film newFilm) throws NoSuchElementException {
+    public Film addFilm(Film newFilm) throws NoSuchElementException {
         return this.filmStorage.addFilm(newFilm);
     }
 
