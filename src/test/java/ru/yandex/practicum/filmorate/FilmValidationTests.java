@@ -24,9 +24,10 @@ public class FilmValidationTests {
 
     @BeforeEach
     void setUp() {
-        filmStorage = new InMemoryFilmStorage();
+
         filmService = new FilmService(filmStorage, userStorage);
         filmController = new FilmController(filmService);
+        filmStorage = new InMemoryFilmStorage(filmService);
         testFilm = new Film(0, "", "", LocalDate.of(2000, 1, 1), 0);
         testFilm.setId(1);
         testFilm.setName("Name");
