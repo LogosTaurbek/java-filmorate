@@ -17,6 +17,9 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private int currentId = 0;
 
+    public InMemoryFilmStorage() {
+    }
+
     public Film addFilm(Film newFilm) {
         FilmService.validateFilm(newFilm);
         newFilm.setId(this.getNextId());

@@ -17,17 +17,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FilmValidationTests {
     FilmStorage filmStorage;
-    UserStorage userStorage;
     FilmService filmService;
     FilmController filmController;
     Film testFilm;
 
     @BeforeEach
     void setUp() {
-
-        filmService = new FilmService(filmStorage, userStorage);
+        filmStorage = new InMemoryFilmStorage();
+        filmService = new FilmService(filmStorage);
         filmController = new FilmController(filmService);
-        filmStorage = new InMemoryFilmStorage(filmService);
         testFilm = new Film(0, "", "", LocalDate.of(2000, 1, 1), 0);
         testFilm.setId(1);
         testFilm.setName("Name");

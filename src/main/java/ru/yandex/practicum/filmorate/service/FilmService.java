@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.FilmValidationException;
@@ -17,7 +18,7 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
 
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
     }
 
@@ -25,7 +26,7 @@ public class FilmService {
         return this.filmStorage.getAllFilms();
     }
 
-    public Film addFilm(Film newFilm) {
+    public Film addFilm( Film newFilm) throws NoSuchElementException {
         return this.filmStorage.addFilm(newFilm);
     }
 
