@@ -27,12 +27,14 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@RequestBody Film newFilm) {
+        log.info("Добавлен фильм: {}", newFilm);
         return this.filmService.addFilm(newFilm);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public Film updateFilm(@RequestBody Film updatedFilm) {
+        log.info("Обновлены данные о фильме: {}", updatedFilm);
         return this.filmService.updateFilm(updatedFilm);
     }
 }

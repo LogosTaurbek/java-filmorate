@@ -24,6 +24,7 @@ public class UserService {
     }
 
     public User createUser(User newUser) {
+        validateUser(newUser);
         return this.userStorage.createUser(newUser);
     }
 
@@ -31,6 +32,7 @@ public class UserService {
         if (!this.isUserExist(updatedUser.getId())) {
             throw new NoSuchElementException("Пользователя с id=" + updatedUser.getId() + " нет в системе.");
         } else {
+            validateUser(updatedUser);
             return this.userStorage.updateUser(updatedUser);
         }
     }
@@ -40,7 +42,7 @@ public class UserService {
     }
 
     // Метод возвращает объект User, потому что в процессе валидации объект может измениться
-    public static User validateUser(User user) throws UserValidationException {
+    public User validateUser(User user) throws UserValidationException {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.error("Отсутствует адрес электронной почты. {}", user);
             throw new UserValidationException("Электронная почта не может быть пустой.");
@@ -62,7 +64,7 @@ public class UserService {
             user.setName(user.getLogin());
             log.info("Отсутствует имя для отображения. Вместо него будет использован логин.");
         }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
+        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
             log.error("Указана нереалистичная дата рождения. {}", user);
             throw new UserValidationException("Дата рождения не может быть в будущем.");
         }

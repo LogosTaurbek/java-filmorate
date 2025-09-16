@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@Slf4j
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
 
@@ -19,19 +16,14 @@ public class InMemoryUserStorage implements UserStorage {
 
 
     public User createUser(User newUser) {
-        User validatedUser = UserService.validateUser(newUser);
         newUser.setId(this.getNextId());
-        this.users.put(validatedUser.getId(), validatedUser);
-        log.info("Создан пользователь: {}", newUser);
-        return validatedUser;
+        this.users.put(newUser.getId(), newUser);
+        return newUser;
     }
 
     public User updateUser(User updatedUser) {
-
-        User validatedUser = UserService.validateUser(updatedUser);
-        this.users.put(validatedUser.getId(), validatedUser);
-        log.info("Обновлены данные о пользователе: {}", updatedUser);
-        return validatedUser;
+        this.users.put(updatedUser.getId(), updatedUser);
+        return updatedUser;
     }
 
     public List<User> getAllUsers() {

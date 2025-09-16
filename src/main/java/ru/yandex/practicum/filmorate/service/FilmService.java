@@ -25,13 +25,17 @@ public class FilmService {
     }
 
     public Film addFilm(Film newFilm) throws NoSuchElementException {
+        validateFilm(newFilm);
         return this.filmStorage.addFilm(newFilm);
     }
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
         if (!this.isFilmExist(updatedFilm.getId())) {
             throw new NoSuchElementException("Пользователя с id=" + updatedFilm.getId() + " нет в системе.");
-        } else return this.filmStorage.updateFilm(updatedFilm);
+        } else {
+            validateFilm(updatedFilm);
+            return this.filmStorage.updateFilm(updatedFilm);
+        }
     }
 
     public Film getFilmById(int id) {
@@ -42,7 +46,7 @@ public class FilmService {
         return this.filmStorage.getFilmById(filmId) != null;
     }
 
-    public static void validateFilm(Film film) throws FilmValidationException {
+    public void validateFilm(Film film) throws FilmValidationException {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Название фильма отсутствует. {}", film);
             throw new FilmValidationException("Название фильма не может быть пустым.");
@@ -51,8 +55,8 @@ public class FilmService {
             log.error("Длина описания фильма ({}) превышает 200 символов. {}", film.getDescription().length(), film);
             throw new FilmValidationException("Максимальная длина описания фильма не может превышать 200 символов.");
         }
-        LocalDate earliestReleaseDAte = LocalDate.of(1895, 12, 28);
-        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(earliestReleaseDAte)) {
+        LocalDate earliestReleaseDate = LocalDate.of(1895, 12, 28);
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(earliestReleaseDate)) {
             log.error("Указана нереалистичная дата релиза. {}", film);
             throw new FilmValidationException("Дата релиза не может быть раньше 28 декабря 1895 года.");
         }
