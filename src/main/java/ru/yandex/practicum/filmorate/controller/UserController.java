@@ -24,6 +24,12 @@ public class UserController {
         return this.userService.getAllUsers();
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public User getUserById(@PathVariable int id) {
+        return this.userService.getUserById(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@RequestBody User newUser) {
@@ -36,5 +42,17 @@ public class UserController {
     public User updateUser(@RequestBody User updatedUser) {
         log.info("Обновлены данные о пользователе: {}", updatedUser);
         return this.userService.updateUser(updatedUser);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void addFriends(@PathVariable int id, @PathVariable int friendId) {
+        this.userService.addFriends(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void removeFriends(@PathVariable int id, @PathVariable int friendId) {
+        this.userService.removeFriends(id, friendId);
     }
 }

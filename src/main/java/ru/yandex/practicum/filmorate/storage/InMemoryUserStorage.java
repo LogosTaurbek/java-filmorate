@@ -41,4 +41,10 @@ public class InMemoryUserStorage implements UserStorage {
         this.currentId = nextId;
         return nextId;
     }
+
+
+    public User addFriend(int userId, int frinendId) {
+        User user = this.getUserById(userId);
+        return null;
+    }
 }

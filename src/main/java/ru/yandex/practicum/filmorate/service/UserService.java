@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -37,8 +38,55 @@ public class UserService {
         }
     }
 
+    public User getUserById(int id) {
+        return this.userStorage.getUserById(id);
+    }
+
+    public void addFriends(int user1Id, int user2Id) {
+        // Пока пользователям не надо одобрять заявки в друзья — добавляем сразу.
+        // То есть если Лена стала другом Саши, то это значит, что Саша теперь друг Лены.
+        User user1 = this.userStorage.getUserById(user1Id);
+        if(isUserExist(user1Id)) {
+            throw new NoSuchElementException("Пользователя с id=" + user1Id + " нет в системе.");
+        }
+        else if(isUserExist(user2Id)){
+            throw new NoSuchElementException("Пользователя с id=" + user2Id + " нет в системе.");
+        } else {
+            if (!this.isFriendExist(user1Id, user2Id)) {
+                user1.getFriendIds().add(user2Id);
+            }
+        }
+    }
+
+    public void removeFriends(int user1Id, int user2Id) {
+        User user1 = this.userStorage.getUserById(user1Id);
+        User user2 = this.userStorage.getUserById(user2Id);
+        //user1.removeFriend(user2);
+        //user2.removeFriend(user1);
+    }
+
+    public List<User> listCommonFriends(int user1Id, int user2Id) {
+        Set<Integer> friendsOfUser1 = this.userStorage.getUserById(user1Id).getFriendIds();
+        Set<Integer> friendsOfUser2 = this.userStorage.getUserById(user2Id).getFriendIds();
+        friendsOfUser1.retainAll(friendsOfUser2);
+        return friendsOfUser1.stream()
+                .map(userId -> this.userStorage.getUserById(userId))
+                .toList();
+    }
+
+    public List<User> getUserFriends(int id) {
+        return this.userStorage.getUserById(id).getFriendIds().stream()
+                .map(userId -> this.userStorage.getUserById(userId))
+                .toList();
+    }
+
     public boolean isUserExist(int userId) {
         return this.userStorage.getUserById(userId) != null;
+    }
+
+    public boolean isFriendExist(int userId, int friendId) {
+        User user = this.userStorage.getUserById(userId);
+        return user.getFriendIds().stream().filter(id -> id == friendId).findFirst() != null;
     }
 
     // Метод возвращает объект User, потому что в процессе валидации объект может измениться
