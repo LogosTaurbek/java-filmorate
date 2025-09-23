@@ -89,10 +89,7 @@ public class FilmService {
         if (count == null) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        return filmStorage.getAllFilms().stream()
-                .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
-                .limit(count)
-                .toList();
+        return filmStorage.getAllFilms().stream().sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes()).limit(count).toList();
     }
 
 }

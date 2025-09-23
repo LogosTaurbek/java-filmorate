@@ -47,12 +47,12 @@ public class UserController {
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
     public void addFriends(@PathVariable int id, @PathVariable int friendId) {
-        this.userService.addFriends(id, friendId);
+        this.userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public void removeFriends(@PathVariable int id, @PathVariable int friendId) {
-        this.userService.removeFriends(id, friendId);
+    public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        this.userService.removeFriend(id, friendId);
     }
 }

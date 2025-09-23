@@ -2,9 +2,9 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -23,18 +23,8 @@ public class User {
         this.login = login;
         this.name = name;
         this.birthday = birthday;
+        this.friendIds = new HashSet<>();
     }
-
-    /*public void addFriend(User newFriend) {
-        if (newFriend == null) {
-            throw new UserValidationException("Пользователь не может быть null.");
-        }
-        this.friendIds.add(newFriend.getId());
-    }
-
-    public void removeFriend(User user) {
-        this.friendIds.remove(user.getId());
-    }*/
 
     public Integer getId() {
         return id;
