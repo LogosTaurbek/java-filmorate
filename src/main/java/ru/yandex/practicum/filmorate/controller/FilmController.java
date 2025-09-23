@@ -43,4 +43,16 @@ public class FilmController {
         log.info("Обновлены данные о фильме: {}", updatedFilm);
         return this.filmService.updateFilm(updatedFilm);
     }
+
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void addLike(@PathVariable int userId, @PathVariable int id) {
+        this.filmService.addLike(userId, id);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void removeLike(@PathVariable int userId, @PathVariable int id) {
+        this.filmService.removeLike(userId, id);
+    }
 }
