@@ -83,7 +83,7 @@ public class UserService {
     }
 
     public List<User> getUserFriends(int id) {
-        return this.userStorage.getUserById(id).getFriendIds().stream().map(userId -> this.userStorage.getUserById(userId)).toList();
+        return this.getUserById(id).getFriendIds().stream().map(userId -> this.userStorage.getUserById(userId)).toList();
     }
 
     public boolean isUserExist(int userId) {
