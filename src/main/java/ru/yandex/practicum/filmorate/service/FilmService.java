@@ -20,11 +20,13 @@ public class FilmService {
     private final AppConfig appConfig;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final UserService userService;
 
-    public FilmService(AppConfig appConfig, FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(AppConfig appConfig, FilmStorage filmStorage, UserStorage userStorage, UserService userService) {
         this.appConfig = appConfig;
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.userService = userService;
     }
 
     public List<Film> getAllFilms() {
@@ -79,8 +81,8 @@ public class FilmService {
     }
 
     public void addLike(int userId, int filmId) {
-        User user = this.userStorage.getUserById(userId);
-        Film film = this.filmStorage.getFilmById(filmId);
+        User user = this.userService.getUserById(userId);
+        Film film = this.getFilmById(filmId);
         film.addLike(user);
     }
 
