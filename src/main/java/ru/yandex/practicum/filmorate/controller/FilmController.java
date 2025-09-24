@@ -30,6 +30,12 @@ public class FilmController {
         return this.filmService.getFilmById(id);
     }
 
+    @GetMapping("/popular")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Film> getTopLikedFilms(@RequestParam(required = false) int count) {
+        return this.filmService.getTopLikedFilms(count);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@RequestBody Film newFilm) {
