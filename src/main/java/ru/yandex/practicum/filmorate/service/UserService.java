@@ -61,7 +61,11 @@ public class UserService {
         if (!isUserExist(userId)) {
             throw new NoSuchElementException("Пользователя с id=" + userId + " нет в системе.");
         }
+        if (!isUserExist(friendId)) {
+            throw new NoSuchElementException("Пользователя с id=" + friendId + " нет в системе.");
+        }
         this.userStorage.removeFriend(userId, friendId);
+        this.userStorage.removeFriend(friendId, userId);
     }
 
     public void removeUser(int userId) {
