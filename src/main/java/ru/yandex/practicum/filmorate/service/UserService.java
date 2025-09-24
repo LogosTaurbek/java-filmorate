@@ -50,9 +50,8 @@ public class UserService {
         } else if (!isUserExist(user2Id)) {
             throw new NoSuchElementException("Пользователя с id=" + user2Id + " нет в системе.");
         } else {
-            if (!this.isFriendExist(user1Id, user2Id)) {
-                this.userStorage.addFriend(user1Id, user2Id);
-            }
+            this.userStorage.addFriend(user1Id, user2Id);
+            this.userStorage.addFriend(user2Id, user1Id);
         }
     }
 

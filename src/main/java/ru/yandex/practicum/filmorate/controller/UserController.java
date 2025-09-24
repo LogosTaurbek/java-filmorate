@@ -30,6 +30,18 @@ public class UserController {
         return this.userService.getUserById(id);
     }
 
+    @GetMapping("/{id}/friends")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> getUserFriends(@PathVariable int id) {
+        return this.userService.getUserFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        return this.userService.listCommonFriends(id, otherId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@RequestBody User newUser) {
