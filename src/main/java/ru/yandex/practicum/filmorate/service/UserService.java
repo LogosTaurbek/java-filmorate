@@ -39,10 +39,9 @@ public class UserService {
     }
 
     public User getUserById(int id) {
-        if(!isUserExist(id)){
+        if (!isUserExist(id)) {
             throw new NoSuchElementException("Пользователя с id=" + id + " нет в системе.");
-        }
-        else return this.userStorage.getUserById(id);
+        } else return this.userStorage.getUserById(id);
     }
 
     public void addFriend(int user1Id, int user2Id) {
