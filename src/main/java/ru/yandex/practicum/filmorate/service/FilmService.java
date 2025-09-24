@@ -87,8 +87,8 @@ public class FilmService {
     }
 
     public void removeLike(int userId, int filmId) {
-        User user = this.userStorage.getUserById(userId);
-        Film film = this.filmStorage.getFilmById(filmId);
+        User user = this.userService.getUserById(userId);
+        Film film = this.getFilmById(filmId);
         film.removeLike(user);
     }
 
