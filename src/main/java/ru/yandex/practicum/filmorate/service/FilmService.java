@@ -33,7 +33,10 @@ public class FilmService {
 
     public Film addFilm(Film newFilm) throws NoSuchElementException {
         validateFilm(newFilm);
-        return this.filmStorage.addFilm(newFilm);
+        log.info("Добавлен фильм: {}", newFilm);
+        Film film = this.filmStorage.addFilm(newFilm);
+        System.out.println(film.getId()+" "+film.getName());
+        return film;
     }
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
@@ -46,6 +49,10 @@ public class FilmService {
     }
 
     public Film getFilmById(int id) {
+        Film film = this.filmStorage.getFilmById(id);
+        if (film == null) {
+            throw new NoSuchElementException("Фильма с id=" + id + " не существует.");
+        }
         return this.filmStorage.getFilmById(id);
     }
 

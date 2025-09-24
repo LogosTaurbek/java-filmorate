@@ -39,7 +39,7 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@RequestBody Film newFilm) {
-        log.info("Добавлен фильм: {}", newFilm);
+        //log.info("Добавлен фильм: {}", newFilm);
         return this.filmService.addFilm(newFilm);
     }
 

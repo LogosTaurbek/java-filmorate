@@ -6,6 +6,7 @@ import lombok.Setter;
 import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -24,6 +25,7 @@ public class Film {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
+        this.usersWhoLiked = new HashSet<>();
     }
 
     public void addLike(User user) {
