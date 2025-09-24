@@ -34,9 +34,7 @@ public class FilmService {
     public Film addFilm(Film newFilm) throws NoSuchElementException {
         validateFilm(newFilm);
         log.info("Добавлен фильм: {}", newFilm);
-        Film film = this.filmStorage.addFilm(newFilm);
-        System.out.println(film.getId()+" "+film.getName());
-        return film;
+        return this.filmStorage.addFilm(newFilm);
     }
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
