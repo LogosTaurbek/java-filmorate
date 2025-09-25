@@ -79,6 +79,7 @@ public class FilmService {
     }
 
     public void addLike(int userId, int filmId) {
+
         User user = this.userService.getUserById(userId);
         log.info("Добавление лайка пользователем с id=" + userId + " к фильму с id=" + filmId);
         Film film = this.getFilmByIdWithException(filmId);
@@ -97,12 +98,15 @@ public class FilmService {
         if (count == null || count <= 0) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        List<Film> films = this.filmStorage.getAllFilms().get();
-        return films
-                .stream()
-                .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
-                .limit(count)
-                .toList();
+        if (this.filmStorage.getAllFilms().isPresent()) {
+            List<Film> films = this.filmStorage.getAllFilms().get();
+            return films
+                    .stream()
+                    .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
+                    .limit(count)
+                    .toList();
+        } else return null;
+
     }
 
     private Film getFilmByIdWithException(int id) {
