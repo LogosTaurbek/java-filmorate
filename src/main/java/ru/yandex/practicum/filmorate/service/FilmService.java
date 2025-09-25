@@ -7,11 +7,11 @@ import ru.yandex.practicum.filmorate.exceptions.FilmValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -19,21 +19,20 @@ public class FilmService {
 
     private final AppConfig appConfig;
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
     private final UserService userService;
 
-    public FilmService(AppConfig appConfig, FilmStorage filmStorage, UserStorage userStorage, UserService userService) {
+    public FilmService(AppConfig appConfig, FilmStorage filmStorage, UserService userService) {
         this.appConfig = appConfig;
         this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
         this.userService = userService;
     }
 
-    public List<Film> getAllFilms() {
+    public Optional<List<Film>> getAllFilms() {
+        log.info("Выведен весь список фильмов");
         return this.filmStorage.getAllFilms();
     }
 
-    public Film addFilm(Film newFilm) throws NoSuchElementException {
+    public Film addFilm(Film newFilm) {
         validateFilm(newFilm);
         log.info("Добавлен фильм: {}", newFilm);
         return this.filmStorage.addFilm(newFilm);
@@ -41,23 +40,21 @@ public class FilmService {
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
         if (!this.isFilmExist(updatedFilm.getId())) {
-            throw new NoSuchElementException("Пользователя с id=" + updatedFilm.getId() + " нет в системе.");
+            throw new NoSuchElementException("Фильма с id=" + updatedFilm.getId() + " нет в системе.");
         } else {
+            log.info("Редактирование фильма с id=" + updatedFilm);
             validateFilm(updatedFilm);
             return this.filmStorage.updateFilm(updatedFilm);
         }
     }
 
     public Film getFilmById(int id) {
-        Film film = this.filmStorage.getFilmById(id);
-        if (film == null) {
-            throw new NoSuchElementException("Фильма с id=" + id + " не существует.");
-        }
-        return this.filmStorage.getFilmById(id);
+        return getFilmByIdWithException(id);
     }
 
     public boolean isFilmExist(int filmId) {
-        return this.filmStorage.getFilmById(filmId) != null;
+        log.info("Проверка существование фильма с id=" + filmId);
+        return this.getFilmByIdWithException(filmId) != null;
     }
 
     public void validateFilm(Film film) throws FilmValidationException {
@@ -78,25 +75,46 @@ public class FilmService {
             log.error("Указана нереалистичная продолжительность фильма. {}", film);
             throw new FilmValidationException("Продолжительность фильма должна быть положительным числом.");
         }
+        log.info("Валидация фильма с названием = " + film.getName());
     }
 
     public void addLike(int userId, int filmId) {
         User user = this.userService.getUserById(userId);
-        Film film = this.getFilmById(filmId);
+        log.info("Добавление лайка пользователем с id=" + userId + " к фильму с id=" + filmId);
+        Film film = this.getFilmByIdWithException(filmId);
         film.addLike(user);
     }
 
     public void removeLike(int userId, int filmId) {
         User user = this.userService.getUserById(userId);
-        Film film = this.getFilmById(filmId);
+        log.info("Удаление лайка пользователем с id=" + userId + " к фильму с id=" + filmId);
+        Film film = this.getFilmByIdWithException(filmId);
         film.removeLike(user);
     }
 
     public List<Film> getTopLikedFilms(Integer count) {
-        if (count == null) {
+        log.info("Получение списка топ фильмов с количеством лайков " + count);
+        if (count == null || count <= 0) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        return filmStorage.getAllFilms().stream().sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes()).limit(count).toList();
+        if (this.filmStorage.getAllFilms().isPresent()) {
+            List<Film> films = this.filmStorage.getAllFilms().get();
+            return films
+                    .stream()
+                    .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
+                    .limit(count)
+                    .toList();
+        } else return null;
+
+    }
+
+    private Film getFilmByIdWithException(int id) {
+        Film film = this.filmStorage.getFilmById(id);
+        log.info("Получение фильма с id=" + id);
+        if (film == null) {
+            throw new NoSuchElementException("Фильма с id=" + id + " не существует.");
+        }
+        return film;
     }
 
 }
