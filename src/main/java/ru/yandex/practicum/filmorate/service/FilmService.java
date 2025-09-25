@@ -97,15 +97,12 @@ public class FilmService {
         if (count == null || count <= 0) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        if (this.filmStorage.getAllFilms().isPresent()) {
-            List<Film> films = this.filmStorage.getAllFilms().get();
-            return films
-                    .stream()
-                    .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
-                    .limit(count)
-                    .toList();
-        } else return null;
-
+        List<Film> films = this.filmStorage.getAllFilms().get();
+        return films
+                .stream()
+                .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
+                .limit(count)
+                .toList();
     }
 
     private Film getFilmByIdWithException(int id) {
