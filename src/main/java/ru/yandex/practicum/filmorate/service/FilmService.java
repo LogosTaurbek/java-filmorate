@@ -54,11 +54,6 @@ public class FilmService {
         return getFilmByIdWithException(id);
     }
 
-    /*public boolean isFilmExist(int filmId) {
-
-        return this.getFilmByIdWithException(filmId) != null;
-    }*/
-
     public void validateFilm(Film film) throws FilmValidationException {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Название фильма отсутствует. {}", film);
