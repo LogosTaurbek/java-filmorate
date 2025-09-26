@@ -110,7 +110,8 @@ public class UserService {
 
     public boolean isUserExist(int userId) {
         log.info("Проверка существования пользователя с id = " + userId);
-        return this.userStorage.getUserById(userId) != null;
+        Optional<User> optUser = this.userStorage.getUserById(userId);
+        return optUser.isPresent();
     }
 
     // Метод возвращает объект User, потому что в процессе валидации объект может измениться
