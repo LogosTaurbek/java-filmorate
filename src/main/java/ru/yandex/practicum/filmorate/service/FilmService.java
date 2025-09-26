@@ -39,14 +39,10 @@ public class FilmService {
     }
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
-        /*if (!this.isFilmExist(updatedFilm.getId())) {
-            throw new NoSuchElementException("Фильма с id=" + updatedFilm.getId() + " нет в системе.");
-        } else {*/
         Film film = this.getFilmByIdWithException(updatedFilm.getId());
         log.info("Редактирование фильма с id=" + updatedFilm);
         validateFilm(updatedFilm);
         return this.filmStorage.updateFilm(updatedFilm);
-        //}
     }
 
     public Film getFilmById(int id) {
