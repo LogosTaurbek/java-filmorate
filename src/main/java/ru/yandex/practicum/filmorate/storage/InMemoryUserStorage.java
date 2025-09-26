@@ -23,15 +23,13 @@ public class InMemoryUserStorage implements UserStorage {
         return updatedUser;
     }
 
-    public Optional<List<User>> getAllUsers() {
-        return Optional.of(this.users.values()
-                .stream()
-                .toList());
+    public List<User> getAllUsers() {
+        return new ArrayList<>(this.users.values());
     }
 
     @Override
-    public User getUserById(int userId) {
-        return this.users.get(userId);
+    public Optional<User> getUserById(int userId) {
+        return Optional.ofNullable(this.users.get(userId));
     }
 
 

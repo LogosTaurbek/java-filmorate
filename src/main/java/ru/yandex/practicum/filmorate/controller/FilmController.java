@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
@@ -21,7 +20,7 @@ public class FilmController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Optional<List<Film>> getAllFilms() {
+    public List<Film> getAllFilms() {
         return this.filmService.getAllFilms();
     }
 

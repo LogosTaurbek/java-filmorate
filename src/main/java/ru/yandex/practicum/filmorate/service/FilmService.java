@@ -27,7 +27,7 @@ public class FilmService {
         this.userService = userService;
     }
 
-    public Optional<List<Film>> getAllFilms() {
+    public List<Film> getAllFilms() {
         log.info("Выведен весь список фильмов");
         return this.filmStorage.getAllFilms();
     }
@@ -39,23 +39,25 @@ public class FilmService {
     }
 
     public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
-        if (!this.isFilmExist(updatedFilm.getId())) {
+        /*if (!this.isFilmExist(updatedFilm.getId())) {
             throw new NoSuchElementException("Фильма с id=" + updatedFilm.getId() + " нет в системе.");
-        } else {
-            log.info("Редактирование фильма с id=" + updatedFilm);
-            validateFilm(updatedFilm);
-            return this.filmStorage.updateFilm(updatedFilm);
-        }
+        } else {*/
+        Film film = this.getFilmByIdWithException(updatedFilm.getId());
+        log.info("Редактирование фильма с id=" + updatedFilm);
+        validateFilm(updatedFilm);
+        return this.filmStorage.updateFilm(updatedFilm);
+        //}
     }
 
     public Film getFilmById(int id) {
+        log.info("Получение фильма с id=" + id);
         return getFilmByIdWithException(id);
     }
 
-    public boolean isFilmExist(int filmId) {
-        log.info("Проверка существование фильма с id=" + filmId);
+    /*public boolean isFilmExist(int filmId) {
+
         return this.getFilmByIdWithException(filmId) != null;
-    }
+    }*/
 
     public void validateFilm(Film film) throws FilmValidationException {
         if (film.getName() == null || film.getName().isBlank()) {
@@ -98,24 +100,20 @@ public class FilmService {
         if (count == null || count <= 0) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        if (this.filmStorage.getAllFilms().isPresent()) {
-            List<Film> films = this.filmStorage.getAllFilms().get();
-            return films
-                    .stream()
-                    .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
-                    .limit(count)
-                    .toList();
-        } else return null;
+        return filmStorage.getAllFilms()
+                .stream()
+                .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
+                .limit(count)
+                .toList();
 
     }
 
     private Film getFilmByIdWithException(int id) {
-        Film film = this.filmStorage.getFilmById(id);
-        log.info("Получение фильма с id=" + id);
-        if (film == null) {
+        Optional<Film> optFilm = this.filmStorage.getFilmById(id);
+        if (optFilm.isEmpty()) {
             throw new NoSuchElementException("Фильма с id=" + id + " не существует.");
         }
-        return film;
+        return optFilm.get();
     }
 
 }

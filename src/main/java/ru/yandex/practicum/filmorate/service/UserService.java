@@ -21,7 +21,7 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public Optional<List<User>> getAllUsers() {
+    public List<User> getAllUsers() {
         return this.userStorage.getAllUsers();
     }
 
@@ -146,8 +146,9 @@ public class UserService {
 
     private User getUserByIdWithException(int id) {
         log.info("Получение пользователя с id = " + id);
-        if (!isUserExist(id)) {
+        Optional<User> optUser = this.userStorage.getUserById(id);
+        if (optUser.isEmpty()) {
             throw new NoSuchElementException("Пользователя с id=" + id + " нет в системе.");
-        } else return this.userStorage.getUserById(id);
+        } else return optUser.get();
     }
 }

@@ -22,16 +22,14 @@ public class InMemoryFilmStorage implements FilmStorage {
         return updatedFilm;
     }
 
-    public Optional<List<Film>> getAllFilms() {
-        return Optional.of(this.films.values()
-                .stream()
-                .toList());
-        //return new ArrayList<>(this.films.values());
+
+    public List<Film> getAllFilms() {
+        return new ArrayList<>(this.films.values());
     }
 
     @Override
-    public Film getFilmById(int id) {
-        return this.films.get(id);
+    public Optional<Film> getFilmById(int id) {
+        return Optional.ofNullable(this.films.get(id));
     }
 
     private int getNextId() {
