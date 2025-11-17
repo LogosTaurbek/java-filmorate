@@ -24,10 +24,21 @@ public class FilmController {
         return this.filmService.getAllFilms();
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Film getFilmById(@PathVariable int id) {
+        return this.filmService.getFilmById(id);
+    }
+
+    @GetMapping("/popular")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Film> getTopLikedFilms(@RequestParam(required = false) int count) {
+        return this.filmService.getTopLikedFilms(count);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@RequestBody Film newFilm) {
-        log.info("Добавлен фильм: {}", newFilm);
         return this.filmService.addFilm(newFilm);
     }
 
@@ -36,5 +47,17 @@ public class FilmController {
     public Film updateFilm(@RequestBody Film updatedFilm) {
         log.info("Обновлены данные о фильме: {}", updatedFilm);
         return this.filmService.updateFilm(updatedFilm);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void addLike(@PathVariable int userId, @PathVariable int id) {
+        this.filmService.addLike(userId, id);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void removeLike(@PathVariable int userId, @PathVariable int id) {
+        this.filmService.removeLike(userId, id);
     }
 }

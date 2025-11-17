@@ -70,7 +70,6 @@ public class UserValidationTests {
 
     @Test
     void testFakeBirthday() {
-        System.out.println(testUser.getLogin());
         testUser.setBirthday(LocalDate.of(3000, 1, 1));
         assertThrows(UserValidationException.class, () -> userController.createUser(testUser));
     }
