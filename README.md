@@ -32,7 +32,7 @@ WHERE email = 'user@example.com';
 
 ```sql
 INSERT INTO users (email, login, name, birthday)
-VALUES ('ivan@mail.ru', 'ivan123', 'Иван Иванов', '1990-05-15');
+VALUES ('ivan@mail.ru', 'ivan123', 'Иван Иванов', '1990-05-16');
 ```
 </details>
 
