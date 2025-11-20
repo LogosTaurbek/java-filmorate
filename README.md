@@ -32,7 +32,7 @@ WHERE email = 'user@example.com';
 
 ```sql
 INSERT INTO users (email, login, name, birthday)
-VALUES ('ivan@mail.ru', 'ivan123', 'Иван Иванов', '1990-05-16');
+VALUES ('ivan@mail.ru', 'ivan123', 'Иван Иванов', '1990-05-15');
 ```
 </details>
 
@@ -120,7 +120,7 @@ WHERE f1.friendFrom = 1 AND f2.friendFrom = 2
 <details><summary>Получить все фильмы</summary>
 
 ```sql
-SELECT filmId, name, description, created_at, duration 
+SELECT filmId, name, description, createdAt, duration 
 FROM films;
 ```
 </details>
@@ -128,7 +128,7 @@ FROM films;
 <details><summary>Получить фильм по ID</summary>
 
 ```sql
-SELECT filmId, name, description, created_at, duration 
+SELECT filmId, name, description, createdAt, duration 
 FROM films 
 WHERE filmId = 1;
 ```
@@ -141,7 +141,7 @@ SELECT
     f.filmId,
     f.name,
     f.description,
-    f.created_at,
+    f.createdAt,
     f.duration,
     g.genre,
     m.rating as mpa_rating
@@ -156,7 +156,7 @@ LEFT JOIN mpaRatings m ON fmr.ratingId = m.ratingId;
 <details><summary>Добавить новый фильм</summary>
 
 ```sql
-INSERT INTO films (name, description, created_at, duration)
+INSERT INTO films (name, description, createdAt, duration)
 VALUES ('Матрица', 'Научная фантастика о виртуальной реальности', '1999-03-31', 136);
 ```
 </details>
@@ -200,7 +200,7 @@ DELETE FROM films WHERE filmId = 1;
 <details><summary>Получить все лайки пользователя</summary>
 
 ```sql
-SELECT f.filmId, f.name, f.description, f.created_at, f.duration 
+SELECT f.filmId, f.name, f.description, f.createdAt, f.duration 
 FROM films f
 JOIN likes l ON f.filmId = l.filmId
 WHERE l.userId = 1;
@@ -235,10 +235,10 @@ WHERE userId = 1 AND filmId = 5;
 <details><summary>Получить самые популярные фильмы (по лайкам)</summary>
 
 ```sql
-SELECT f.filmId, f.name, f.description, f.created_at, f.duration, COUNT(l.userId) as likes_count
+SELECT f.filmId, f.name, f.description, f.createdAt, f.duration, COUNT(l.userId) as likes_count
 FROM films f
 LEFT JOIN likes l ON f.filmId = l.filmId
-GROUP BY f.filmId, f.name, f.description, f.created_at, f.duration
+GROUP BY f.filmId, f.name, f.description, f.createdAt, f.duration
 ORDER BY likes_count DESC
 LIMIT 10;
 ```
@@ -259,7 +259,7 @@ FROM genres;
 <details><summary>Получить фильмы определённого жанра</summary>
 
 ```sql
-SELECT f.filmId, f.name, f.description, f.created_at, f.duration
+SELECT f.filmId, f.name, f.description, f.createdAt, f.duration
 FROM films f
 JOIN filmsGenres fg ON f.filmId = fg.filmId
 WHERE fg.genreId = 1;
@@ -289,7 +289,7 @@ FROM mpaRatings;
 <details><summary>Получить фильмы с определённым рейтингом</summary>
 
 ```sql
-SELECT f.filmId, f.name, f.description, f.created_at, f.duration
+SELECT f.filmId, f.name, f.description, f.createdAt, f.duration
 FROM films f
 JOIN filmsMpaRatings fmr ON f.filmId = fmr.filmId
 WHERE fmr.ratingId = 2;
@@ -311,7 +311,7 @@ VALUES ('PG-13');
 <details><summary>Рекомендации: фильмы, которые понравились друзьям, но не просмотрены пользователем</summary>
 
 ```sql
-SELECT DISTINCT f.filmId, f.name, f.description, f.created_at, f.duration
+SELECT DISTINCT f.filmId, f.name, f.description, f.createdAt, f.duration
 FROM films f
 JOIN likes l ON f.filmId = l.filmId
 JOIN friendships fr ON l.userId = fr.friendTo
@@ -355,3 +355,10 @@ ORDER BY friends_count DESC
 LIMIT 10;
 ```
 </details>
+
+---
+
+**Примечание**: Запросы адаптированы для PostgreSQL. Основные отличия от MySQL:
+- Используется `STRING_AGG()` вместо `GROUP_CONCAT()`
+- Поддерживается стандартный SQL синтаксис
+- Типы данных: `SERIAL` для автоинкремента, `BOOLEAN` для булевых значений
