@@ -1,0 +1,71 @@
+Table users {
+  userId integer [primary key]
+  email varhcar [unique]
+  login varchar [not null]
+  name varchar
+  birthday date
+}
+
+Table friendships {
+  friendFrom integer [not null]
+  friendTo integer [not null]
+  acceptanceStatus bool [default: false]
+  indexes {
+    (friendFrom, friendTo) [pk]
+  }
+}
+
+Table likes {
+  userId integer [not null]
+  filmId integer [not null]
+  indexes {
+    (userId, filmId) [pk]
+  }
+}
+
+Table films {
+  filmId integer [primary key]
+  name varchar [not null]
+  description text
+  createdAt date
+  duration integer
+}
+
+Table genres {
+  genreId integer [primary key]
+  genre varchar [not null]
+}
+
+Table filmsGenres {
+  filmId integer [not null]
+  genreId integer [not null]
+}
+
+Table mpaRatings {
+  ratingId integer [primary key]
+  rating varchar [not null, unique]
+}
+
+Table filmsMpaRatings {
+  filmId integer [not null]
+  ratingId integer [not null]
+  indexes {
+    (filmId, ratingId)
+  }
+}
+
+Ref: friendships.friendFrom > users.userId [delete: cascade, update: cascade]
+
+Ref: friendships.friendTo > users.userId [delete: cascade, update: cascade]
+
+Ref: filmsGenres.filmId > films.filmId [delete: cascade, update: cascade]
+
+Ref: filmsGenres.genreId > genres.genreId [delete: cascade, update: cascade]
+
+Ref: filmsMpaRatings.filmId > films.filmId [delete: cascade, update: cascade]
+
+Ref: filmsMpaRatings.ratingId - mpaRatings.ratingId [delete: cascade, update: cascade]
+
+Ref: likes.userId > users.userId [delete: cascade, update: cascade]
+
+Ref: likes.filmId > films.filmId [delete: cascade, update: cascade]
