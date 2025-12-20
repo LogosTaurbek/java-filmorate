@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -18,15 +19,16 @@ public class Film {
     private LocalDate releaseDate;
     private int duration;
     private Set<User> usersWhoLiked;
-
-    public Film(int id, String name, String description, LocalDate releaseDate, int duration) {
+    private List<Genre> genres;
+    private Mpa mpa;
+    /*public Film(int id, String name, String description, LocalDate releaseDate, int duration) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.usersWhoLiked = new HashSet<>();
-    }
+    }*/
 
     public void addLike(User user) {
         if (user == null) {

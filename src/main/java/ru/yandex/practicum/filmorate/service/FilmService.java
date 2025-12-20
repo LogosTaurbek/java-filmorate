@@ -1,10 +1,17 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.config.AppConfig;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.FilmValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
@@ -12,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -21,28 +29,36 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserService userService;
 
-    public FilmService(AppConfig appConfig, FilmStorage filmStorage, UserService userService) {
+    public FilmService(
+            AppConfig appConfig,
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            UserService userService
+    ) {
         this.appConfig = appConfig;
         this.filmStorage = filmStorage;
         this.userService = userService;
     }
 
-    public List<Film> getAllFilms() {
+    public List<FilmDto> getAllFilms() {
         log.info("Выведен весь список фильмов");
-        return this.filmStorage.getAllFilms();
+        return this.filmStorage.getAllFilms().stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 
-    public Film addFilm(Film newFilm) {
-        validateFilm(newFilm);
-        log.info("Добавлен фильм: {}", newFilm);
-        return this.filmStorage.addFilm(newFilm);
+    public FilmDto addFilm(NewFilmRequest newFilmRequest) {
+        validateFilm(newFilmRequest);
+        log.info("Добавлен фильм: {}", newFilmRequest);
+        Film newFilm = FilmMapper.mapToFilm(newFilmRequest);
+        newFilm = filmStorage.addFilm(newFilm);
+        return FilmMapper.mapToFilmDto(newFilm);
     }
 
-    public Film updateFilm(Film updatedFilm) throws NoSuchElementException {
-        Film film = this.getFilmByIdWithException(updatedFilm.getId());
-        log.info("Редактирование фильма с id=" + updatedFilm);
-        validateFilm(updatedFilm);
-        return this.filmStorage.updateFilm(updatedFilm);
+    public FilmDto updateFilm(UpdateFilmRequest updateFilmRequest) throws NoSuchElementException {
+        Film filmExc = this.getFilmByIdWithException(updateFilmRequest.getId());
+        Film updatedFilm = FilmMapper.updateFilmFields(filmExc, updateFilmRequest);
+        updatedFilm = filmStorage.updateFilm(updatedFilm);
+        return FilmMapper.mapToFilmDto(updatedFilm);
     }
 
     public Film getFilmById(int id) {
@@ -50,7 +66,7 @@ public class FilmService {
         return getFilmByIdWithException(id);
     }
 
-    public void validateFilm(Film film) throws FilmValidationException {
+    public void validateFilm(NewFilmRequest film) throws FilmValidationException {
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Название фильма отсутствует. {}", film);
             throw new FilmValidationException("Название фильма не может быть пустым.");
@@ -67,6 +83,20 @@ public class FilmService {
         if (film.getDuration() <= 0) {
             log.error("Указана нереалистичная продолжительность фильма. {}", film);
             throw new FilmValidationException("Продолжительность фильма должна быть положительным числом.");
+        }
+        if (film.getMpa() != null) {
+            Mpa mpaRating = film.getMpa();
+            if (!filmStorage.mpaRatingExists(mpaRating.getId())) {
+                throw new NoSuchElementException("В БД нет рейтинга MPA с ID=" + mpaRating.getId());
+            }
+        }
+        if (film.getGenres() != null) {
+            List<Genre> genres = film.getGenres();
+            for (Genre genre : genres) {
+                if (!filmStorage.genreExists(genre.getId())) {
+                    throw new NoSuchElementException("В БД нет жанра с ID=" + genre.getId());
+                }
+            }
         }
         log.info("Валидация фильма с названием = " + film.getName());
     }
@@ -100,9 +130,9 @@ public class FilmService {
     }
 
     private Film getFilmByIdWithException(int id) {
-        Optional<Film> optFilm = this.filmStorage.getFilmById(id);
+        Optional<Film> optFilm = filmStorage.getFilmById(id);
         if (optFilm.isEmpty()) {
-            throw new NoSuchElementException("Фильма с id=" + id + " не существует.");
+            throw new NoSuchElementException("Фильма с ID=" + id + "нет в БД.");
         }
         return optFilm.get();
     }

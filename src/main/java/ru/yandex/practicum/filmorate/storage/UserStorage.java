@@ -14,9 +14,15 @@ public interface UserStorage {
 
     Optional<User> getUserById(int userId);
 
-    User addFriend(int userId, int friendId);
+    Optional<User> getUserByEmail(String email);
 
-    User removeUser(int userId);
+    Optional<User> getUserByLogin(String login);
 
-    User removeFriend(int userId, int friendId);
+    List<User> getUserFriends(int userId);
+
+    void addFriend(int userId, int friendId);
+
+    void removeUser(int userId);
+
+    void removeFriend(int userId, int friendId);
 }

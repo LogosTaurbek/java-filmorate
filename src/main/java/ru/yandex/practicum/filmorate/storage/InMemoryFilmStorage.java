@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Component
@@ -17,11 +18,16 @@ public class InMemoryFilmStorage implements FilmStorage {
         return newFilm;
     }
 
+    @Override
+    public boolean filmExists(String name, LocalDate releaseDate, int duration) {
+        return false;
+    }
+
+
     public Film updateFilm(Film updatedFilm) {
         this.films.put(updatedFilm.getId(), updatedFilm);
         return updatedFilm;
     }
-
 
     public List<Film> getAllFilms() {
         return new ArrayList<>(this.films.values());
@@ -30,6 +36,29 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Optional<Film> getFilmById(int id) {
         return Optional.ofNullable(this.films.get(id));
+    }
+
+    @Override
+    public boolean mpaRatingExists(int ratingId) {
+        return false;
+    }
+
+    @Override
+    public boolean genreExists(int genreId) {
+        return false;
+    }
+
+    @Override
+    public void addLike(int userId, int filmId) {
+    }
+
+    @Override
+    public void removeLike(int userId, int filmId) {
+    }
+
+    @Override
+    public List<Integer> getTopLikedFilmIds(int count) {
+        return List.of();
     }
 
     private int getNextId() {

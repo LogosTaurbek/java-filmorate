@@ -1,8 +1,16 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.exceptions.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -11,34 +19,50 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class UserService {
     public UserStorage userStorage;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage
+    ) {
         this.userStorage = userStorage;
     }
 
-    public List<User> getAllUsers() {
-        return this.userStorage.getAllUsers();
+    public List<UserDto> getAllUsers() {
+        return this.userStorage.getAllUsers().stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
     }
 
-    public User createUser(User newUser) {
+    public UserDto createUser(NewUserRequest newUser) {
         validateUser(newUser);
         log.info("Создание пользователя с именем = " + newUser.getName());
-        return this.userStorage.createUser(newUser);
+        //return this.userStorage.createUser(newUser);
+        Optional<User> userAlreadyExists = this.userStorage.getUserByEmail(newUser.getEmail());
+        if (userAlreadyExists.isPresent()) {
+            throw new DuplicatedDataException("Данный имейл уже используется: " + newUser.getEmail());
+        }
+        userAlreadyExists = userStorage.getUserByLogin(newUser.getLogin());
+        if (userAlreadyExists.isPresent()) {
+            throw new DuplicatedDataException("Данный логин уже используется: " + newUser.getLogin());
+        }
+        User user = UserMapper.mapToUser(newUser);
+        user = userStorage.createUser(user);
+        return UserMapper.mapToUserDto(user);
     }
 
-    public User updateUser(User updatedUser) throws NoSuchElementException {
-        log.info("Редактирование пользователя с id = " + updatedUser.getId());
-        if (!this.isUserExist(updatedUser.getId())) {
-            throw new NoSuchElementException("Пользователя с id=" + updatedUser.getId() + " нет в системе.");
-        } else {
-            validateUser(updatedUser);
-            return this.userStorage.updateUser(updatedUser);
-        }
+    public UserDto updateUser(UpdateUserRequest request) throws NoSuchElementException {
+        User updatedUser = userStorage.getUserById(request.getId())
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Пользователя с id=" + request.getId() + " нет в системе."
+                ));
+        updatedUser = userStorage.updateUser(updatedUser);
+        return UserMapper.mapToUserDto(updatedUser);
     }
 
     public User getUserById(int id) {
@@ -99,12 +123,13 @@ public class UserService {
                 .toList();
     }
 
-    public List<User> getUserFriends(int id) {
+    public List<UserDto> getUserFriends(int id) {
         log.info("Получение списка друзей пользователя с id = " + id);
         return this.getUserByIdWithException(id)
                 .getFriendIds()
                 .stream()
                 .map(userId -> this.getUserByIdWithException(userId))
+                .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
@@ -115,7 +140,7 @@ public class UserService {
     }
 
     // Метод возвращает объект User, потому что в процессе валидации объект может измениться
-    public User validateUser(User user) throws UserValidationException {
+    public NewUserRequest validateUser(NewUserRequest user) throws UserValidationException {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.error("Отсутствует адрес электронной почты. {}", user);
             throw new UserValidationException("Электронная почта не может быть пустой.");

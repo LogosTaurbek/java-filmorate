@@ -32,6 +32,16 @@ public class InMemoryUserStorage implements UserStorage {
         return Optional.ofNullable(this.users.get(userId));
     }
 
+    @Override
+    public Optional<User> getUserByEmail(String email) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> getUserByLogin(String login) {
+        return Optional.empty();
+    }
+
 
     private int getNextId() {
         int nextId = this.currentId + 1;
@@ -39,21 +49,26 @@ public class InMemoryUserStorage implements UserStorage {
         return nextId;
     }
 
-    public User addFriend(int userId, int friendId) {
+    public void addFriend(int userId, int friendId) {
         User user = this.users.get(userId);
         Set<Integer> friends = user.getFriendIds();
         friends.add(friendId);
-        return user;
+        //return user;
     }
 
     @Override
-    public User removeUser(int userId) {
-        return this.users.remove(userId);
+    public void removeUser(int userId) {
+        //return this.users.remove(userId);
     }
 
-    public User removeFriend(int userId, int friendId) {
+    public void removeFriend(int userId, int friendId) {
         User user = this.users.get(userId);
         user.getFriendIds().remove(friendId);
-        return user;
+        //return user;
+    }
+
+    @Override
+    public List<User> getUserFriends(int userId) {
+        return new ArrayList<>();
     }
 }

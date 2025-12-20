@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -20,7 +23,7 @@ public class UserController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<User> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         return this.userService.getAllUsers();
     }
 
@@ -32,7 +35,7 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     @ResponseStatus(HttpStatus.OK)
-    public List<User> getUserFriends(@PathVariable int id) {
+    public List<UserDto> getUserFriends(@PathVariable int id) {
         return this.userService.getUserFriends(id);
     }
 
@@ -44,14 +47,14 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@RequestBody User newUser) {
-        log.info("Создан пользователь: {}", newUser);
-        return this.userService.createUser(newUser);
+    public UserDto createUser(@RequestBody NewUserRequest newUserRequest) {
+        log.info("Создан пользователь: {}", newUserRequest);
+        return this.userService.createUser(newUserRequest);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public User updateUser(@RequestBody User updatedUser) {
+    public UserDto updateUser(@RequestBody UpdateUserRequest updatedUser) {
         log.info("Обновлены данные о пользователе: {}", updatedUser);
         return this.userService.updateUser(updatedUser);
     }

@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -20,7 +23,7 @@ public class FilmController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Film> getAllFilms() {
+    public List<FilmDto> getAllFilms() {
         return this.filmService.getAllFilms();
     }
 
@@ -38,15 +41,15 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film addFilm(@RequestBody Film newFilm) {
-        return this.filmService.addFilm(newFilm);
+    public FilmDto addFilm(@RequestBody NewFilmRequest newFilmRequest) {
+        return this.filmService.addFilm(newFilmRequest);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public Film updateFilm(@RequestBody Film updatedFilm) {
-        log.info("Обновлены данные о фильме: {}", updatedFilm);
-        return this.filmService.updateFilm(updatedFilm);
+    public FilmDto updateFilm(@RequestBody UpdateFilmRequest updateFilmRequest) {
+        log.info("Обновлены данные о фильме: {}", updateFilmRequest);
+        return this.filmService.updateFilm(updateFilmRequest);
     }
 
     @PutMapping("/{id}/like/{userId}")
