@@ -102,31 +102,21 @@ public class FilmService {
     }
 
     public void addLike(int userId, int filmId) {
-
-        User user = this.userService.getUserById(userId);
-        log.info("Добавление лайка пользователем с id=" + userId + " к фильму с id=" + filmId);
-        Film film = this.getFilmByIdWithException(filmId);
-        film.addLike(user);
+        filmStorage.addLike(userId, filmId);
     }
 
     public void removeLike(int userId, int filmId) {
-        User user = this.userService.getUserById(userId);
-        log.info("Удаление лайка пользователем с id=" + userId + " к фильму с id=" + filmId);
-        Film film = this.getFilmByIdWithException(filmId);
-        film.removeLike(user);
+        filmStorage.removeLike(userId, filmId);
     }
 
-    public List<Film> getTopLikedFilms(Integer count) {
-        log.info("Получение списка топ фильмов с количеством лайков " + count);
-        if (count == null || count <= 0) {
+    public List<FilmDto> getTopLikedFilms(Integer count) {
+        if (count == null) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        return filmStorage.getAllFilms()
-                .stream()
-                .sorted((f1, f2) -> f2.getNumberOfLikes() - f1.getNumberOfLikes())
-                .limit(count)
+        return filmStorage.getTopLikedFilmIds(count).stream()
+                .map(filmId -> filmStorage.getFilmById(filmId).get())
+                .map(FilmMapper::mapToFilmDto)
                 .toList();
-
     }
 
     private Film getFilmByIdWithException(int id) {

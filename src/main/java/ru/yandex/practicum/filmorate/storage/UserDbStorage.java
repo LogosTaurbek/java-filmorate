@@ -58,6 +58,16 @@ public class UserDbStorage extends BaseBdStorage<User> implements UserStorage {
         return Optional.of(user);
     }
 
+    public Optional<User> getUserByIdWithFriends(int id) {
+        Optional<User> optUser = findOne(GET_BY_ID_QUERY, id);
+        if (optUser.isEmpty()) {
+            return optUser;
+        }
+        User user = optUser.get();
+        user.setFriends(this.getUserFriends(user.getId()));
+        return Optional.of(user);
+    }
+
     @Override
     public Optional<User> getUserByEmail(String email) {
         return findOne(GET_BY_EMAIL_QUERY, email);

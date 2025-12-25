@@ -35,7 +35,7 @@ public class FilmController {
 
     @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
-    public List<Film> getTopLikedFilms(@RequestParam(required = false) int count) {
+    public List<FilmDto> getTopLikedFilms(@RequestParam(required = false) int count) {
         return this.filmService.getTopLikedFilms(count);
     }
 

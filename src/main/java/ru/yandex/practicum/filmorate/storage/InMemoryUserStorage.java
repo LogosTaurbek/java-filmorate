@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -9,6 +11,8 @@ import java.util.*;
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
 
+    @Getter
+    @Setter
     private int currentId = 0;
 
 
@@ -50,10 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public void addFriend(int userId, int friendId) {
-        User user = this.users.get(userId);
-        Set<Integer> friends = user.getFriendIds();
-        friends.add(friendId);
-        //return user;
+
     }
 
     @Override

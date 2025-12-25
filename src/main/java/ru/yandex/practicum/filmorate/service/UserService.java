@@ -39,18 +39,18 @@ public class UserService {
     }
 
     public UserDto createUser(NewUserRequest newUser) {
-        validateUser(newUser);
-        log.info("Создание пользователя с именем = " + newUser.getName());
+        NewUserRequest validatedRequest = validateUser(newUser);
+        log.info("Создание пользователя с именем = " + validatedRequest.getName());
         //return this.userStorage.createUser(newUser);
-        Optional<User> userAlreadyExists = this.userStorage.getUserByEmail(newUser.getEmail());
+        Optional<User> userAlreadyExists = this.userStorage.getUserByEmail(validatedRequest.getEmail());
         if (userAlreadyExists.isPresent()) {
-            throw new DuplicatedDataException("Данный имейл уже используется: " + newUser.getEmail());
+            throw new DuplicatedDataException("Данный имейл уже используется: " + validatedRequest.getEmail());
         }
-        userAlreadyExists = userStorage.getUserByLogin(newUser.getLogin());
+        userAlreadyExists = userStorage.getUserByLogin(validatedRequest.getLogin());
         if (userAlreadyExists.isPresent()) {
-            throw new DuplicatedDataException("Данный логин уже используется: " + newUser.getLogin());
+            throw new DuplicatedDataException("Данный логин уже используется: " + validatedRequest.getLogin());
         }
-        User user = UserMapper.mapToUser(newUser);
+        User user = UserMapper.mapToUser(validatedRequest);
         user = userStorage.createUser(user);
         return UserMapper.mapToUserDto(user);
     }
@@ -82,7 +82,7 @@ public class UserService {
             throw new NoSuchElementException("Пользователи с id=" + user1Id + " одинаковые");
         } else {
             this.userStorage.addFriend(user1Id, user2Id);
-            this.userStorage.addFriend(user2Id, user1Id);
+            //this.userStorage.addFriend(user2Id, user1Id);
         }
     }
 
@@ -98,7 +98,7 @@ public class UserService {
             throw new NoSuchElementException("Пользователи с id=" + userId + " одинаковые");
         }
         this.userStorage.removeFriend(userId, friendId);
-        this.userStorage.removeFriend(friendId, userId);
+        //this.userStorage.removeFriend(friendId, userId);
     }
 
     public void removeUser(int userId) {
@@ -125,10 +125,12 @@ public class UserService {
 
     public List<UserDto> getUserFriends(int id) {
         log.info("Получение списка друзей пользователя с id = " + id);
-        return this.getUserByIdWithException(id)
-                .getFriendIds()
-                .stream()
-                .map(userId -> this.getUserByIdWithException(userId))
+        if (!this.isUserExist(id)) {
+            throw new NoSuchElementException(
+                    "Пользователя с id=" + id + " нет в системе."
+            );
+        }
+        return this.userStorage.getUserFriends(id).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
