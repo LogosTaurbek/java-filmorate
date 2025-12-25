@@ -8,17 +8,12 @@ import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exceptions.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
-import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +36,6 @@ public class UserService {
     public UserDto createUser(NewUserRequest newUser) {
         NewUserRequest validatedRequest = validateUser(newUser);
         log.info("Создание пользователя с именем = " + validatedRequest.getName());
-        //return this.userStorage.createUser(newUser);
         Optional<User> userAlreadyExists = this.userStorage.getUserByEmail(validatedRequest.getEmail());
         if (userAlreadyExists.isPresent()) {
             throw new DuplicatedDataException("Данный имейл уже используется: " + validatedRequest.getEmail());
@@ -82,7 +76,6 @@ public class UserService {
             throw new NoSuchElementException("Пользователи с id=" + user1Id + " одинаковые");
         } else {
             this.userStorage.addFriend(user1Id, user2Id);
-            //this.userStorage.addFriend(user2Id, user1Id);
         }
     }
 
@@ -98,7 +91,6 @@ public class UserService {
             throw new NoSuchElementException("Пользователи с id=" + userId + " одинаковые");
         }
         this.userStorage.removeFriend(userId, friendId);
-        //this.userStorage.removeFriend(friendId, userId);
     }
 
     public void removeUser(int userId) {
@@ -109,18 +101,15 @@ public class UserService {
         this.userStorage.removeUser(userId);
     }
 
-    public List<User> listCommonFriends(int user1Id, int user2Id) {
+    public List<UserDto> listCommonFriends(int user1Id, int user2Id) {
         log.info("Получение списка общих друзей пользователя с id = " + user1Id + " и пользователя с id = " + user2Id);
         if (user1Id == user2Id) {
             throw new NoSuchElementException("Пользователи с id=" + user1Id + " одинаковые");
         }
-        Set<Integer> friendsOfUser1 = this.getUserByIdWithException(user1Id).getFriendIds();
-        Set<Integer> friendsOfUser2 = this.getUserByIdWithException(user2Id).getFriendIds();
+        Set<UserDto> friendsOfUser1 = new HashSet<>(this.getUserFriends(user1Id));
+        Set<UserDto> friendsOfUser2 = new HashSet<>(this.getUserFriends(user2Id));
         friendsOfUser1.retainAll(friendsOfUser2);
-        return friendsOfUser1
-                .stream()
-                .map(userId -> this.getUserByIdWithException(userId))
-                .toList();
+        return new ArrayList<>(friendsOfUser1);
     }
 
     public List<UserDto> getUserFriends(int id) {

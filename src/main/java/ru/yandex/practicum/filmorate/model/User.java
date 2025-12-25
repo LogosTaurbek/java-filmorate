@@ -16,6 +16,5 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
-    private Set<Integer> friendIds;
     private List<User> friends;
 }
