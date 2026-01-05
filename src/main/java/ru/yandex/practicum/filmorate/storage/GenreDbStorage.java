@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.mappers.GenreRowMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +20,7 @@ public class GenreDbStorage extends BaseBdStorage<Genre> implements GenreStorage
             "SELECT COUNT(*) FROM genres " +
                     "WHERE id = ?";
 
-    public GenreDbStorage(JdbcTemplate jdbc, RowMapper<Genre> mapper) {
+    public GenreDbStorage(JdbcTemplate jdbc, GenreRowMapper mapper) {
         super(jdbc, mapper);
     }
 
