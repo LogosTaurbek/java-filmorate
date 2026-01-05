@@ -13,11 +13,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,14 +26,17 @@ public class FilmService {
     private final AppConfig appConfig;
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final GenreStorage genreStorage;
 
     public FilmService(
             AppConfig appConfig,
             @Qualifier("filmDbStorage") FilmStorage filmStorage,
-            UserService userService
+            UserService userService,
+            GenreStorage genreStorage
     ) {
         this.appConfig = appConfig;
         this.filmStorage = filmStorage;
+        this.genreStorage = genreStorage;
         this.userService = userService;
     }
 
@@ -60,9 +62,13 @@ public class FilmService {
         return FilmMapper.mapToFilmDto(updatedFilm);
     }
 
-    public Film getFilmById(int id) {
+    public FilmDto getFilmById(int id) {
         log.info("Получение фильма с id=" + id);
-        return getFilmByIdWithException(id);
+        Optional<Film> optFilm = filmStorage.getFilmById(id);
+        if (optFilm.isEmpty()) {
+            throw new NoSuchElementException("Фильма с ID=" + id + "нет в БД.");
+        }
+        return FilmMapper.mapToFilmDto(optFilm.get());
     }
 
     public void validateFilm(NewFilmRequest film) throws FilmValidationException {
@@ -92,7 +98,7 @@ public class FilmService {
         if (film.getGenres() != null) {
             List<Genre> genres = film.getGenres();
             for (Genre genre : genres) {
-                if (!filmStorage.genreExists(genre.getId())) {
+                if (!genreStorage.genreExists(genre.getId())) {
                     throw new NoSuchElementException("В БД нет жанра с ID=" + genre.getId());
                 }
             }
@@ -101,19 +107,43 @@ public class FilmService {
     }
 
     public void addLike(int userId, int filmId) {
+        log.info("Добавления лайка к фильму с id=" + filmId + " пользователем с id=" + userId);
+        Optional<Film> optFilm = filmStorage.getFilmById(filmId);
+        if (optFilm.isEmpty()) {
+            throw new NoSuchElementException("Фильма с ID=" + filmId + "нет в БД.");
+        }
         filmStorage.addLike(userId, filmId);
     }
 
     public void removeLike(int userId, int filmId) {
+        log.info("Удаление лайка с фильма с id=" + filmId + " пользователем с id=" + userId);
+        Optional<Film> optFilm = filmStorage.getFilmById(filmId);
+        if (optFilm.isEmpty()) {
+            throw new NoSuchElementException("Фильма с ID=" + filmId + "нет в БД.");
+        }
         filmStorage.removeLike(userId, filmId);
     }
 
+    private Map<Integer, Integer> createOrderMap(List<Integer> ids) {
+        Map<Integer, Integer> orderMap = new HashMap<>();
+        for (int i = 0; i < ids.size(); i++) {
+            orderMap.put(ids.get(i), i);
+        }
+        return orderMap;
+    }
+
     public List<FilmDto> getTopLikedFilms(Integer count) {
-        if (count == null) {
+        if (count == null || count <= 0) {
             count = appConfig.getDefaultNumberOfTopFilms();
         }
-        return filmStorage.getTopLikedFilmIds(count).stream()
-                .map(filmId -> filmStorage.getFilmById(filmId).get())
+        List<Integer> topFilmIds = filmStorage.getTopLikedFilmIds(count);
+        List<Film> films = filmStorage.getFilmsByIds(topFilmIds);
+        Map<Integer, Integer> orderMap = createOrderMap(topFilmIds);
+
+        log.info("Получение списка топ фильмов с количеством лайков " + count);
+
+        return films.stream()
+                .sorted(Comparator.comparing(film -> orderMap.get(film.getId())))
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }

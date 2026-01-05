@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
@@ -29,7 +28,7 @@ public class FilmController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Film getFilmById(@PathVariable int id) {
+    public FilmDto getFilmById(@PathVariable int id) {
         return this.filmService.getFilmById(id);
     }
 

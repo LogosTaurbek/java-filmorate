@@ -39,12 +39,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public boolean mpaRatingExists(int ratingId) {
-        return false;
+    public List<Film> getFilmsByIds(List<Integer> filmIds) {
+        return new ArrayList<>(this.films.values());
     }
 
     @Override
-    public boolean genreExists(int genreId) {
+    public boolean mpaRatingExists(int ratingId) {
         return false;
     }
 

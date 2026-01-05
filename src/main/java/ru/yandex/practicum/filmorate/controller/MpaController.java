@@ -21,12 +21,14 @@ public class MpaController {
     @GetMapping("/{mpaId}")
     @ResponseStatus(HttpStatus.OK)
     public Mpa getMpaById(@PathVariable int mpaId) {
+        log.info("Запрос на получение рейтинга с id=" + mpaId);
         return this.mpaService.getMpaById(mpaId);
     }
 
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     public List<Mpa> getAllMpa() {
+        log.info("Запрос на получение всех рейтингов");
         return this.mpaService.getAllMpa();
     }
 }

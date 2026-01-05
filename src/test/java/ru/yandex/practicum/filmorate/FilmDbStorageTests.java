@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FilmDbStorageTests {
 
     private final FilmDbStorage filmDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
     @Test
     public void testAddFilm() {
@@ -125,9 +127,9 @@ public class FilmDbStorageTests {
 
     @Test
     public void testGenreExists() {
-        boolean exists = filmDbStorage.genreExists(1);
+        boolean exists = genreDbStorage.genreExists(1);
         assertThat(exists).isTrue();
-        exists = filmDbStorage.genreExists(20);
+        exists = genreDbStorage.genreExists(20);
         assertThat(exists).isFalse();
     }
 }

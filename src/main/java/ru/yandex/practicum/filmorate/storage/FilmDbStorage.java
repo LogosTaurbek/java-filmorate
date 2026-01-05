@@ -13,6 +13,14 @@ import java.util.*;
 
 @Repository
 public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
+
+    private final GenreStorage genreStorage;
+
+    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreStorage genreStorage) {
+        super(jdbc, mapper);
+        this.genreStorage = genreStorage;
+    }
+
     private static final String INSERT_FILM_QUERY =
             "INSERT INTO films(name, description, releaseDate, duration) " +
                     "VALUES (?, ?, ?, ?)";
@@ -34,7 +42,20 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
                     "AND releaseDate = ? " +
                     "AND duration = ?";
     private static final String GET_FILM_BY_ID =
-            "SELECT * from films WHERE id = ?;";
+            "SELECT f.*, m.ratingId as mpa_id, r.id as rating_id, r.rating as rating_name, " +
+                    "g.id as genre_id, g.genre as genre_name " +
+                    "FROM films f " +
+                    "LEFT JOIN filmsMpaRatings m ON m.filmId = f.id " +
+                    "LEFT JOIN mpaRatings r ON r.id = m.ratingId " +
+                    "LEFT JOIN filmsGenres fg ON fg.filmId = f.id " +
+                    "LEFT JOIN genres g ON g.id = fg.genreId " +
+                    "WHERE f.id = ?;";
+    private static final String GET_FILMS_BY_IDS =
+            "SELECT f.*, m.ratingId as mpa_id, r.id as rating_id, r.rating as rating_name " +
+                    "FROM films f " +
+                    "LEFT JOIN filmsMpaRatings m ON m.filmId = f.id " +
+                    "LEFT JOIN mpaRatings r ON r.id = m.ratingId " +
+                    "WHERE f.id IN (%s);";
     private static final String GET_MPA_RATING_BY_FILM_ID =
             "SELECT ratingId from filmsMpaRatings WHERE filmId = ?;";
     private static final String GET_MPA_RATING_BY_ID =
@@ -55,6 +76,14 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
             "DELETE from filmsGenres WHERE filmId = ?;";
     private static final String GET_ALL_FILMS =
             "SELECT * from films;";
+    private static final String GET_ALL_FILMS_WITH_RATING =
+            "SELECT f.*, m.ratingId as mpa_id, r.id as rating_id, r.rating as rating_name, " +
+                    "g.id as genre_id, g.genre as genre_name " +
+                    "FROM films f " +
+                    "LEFT JOIN filmsMpaRatings m ON m.filmId = f.id " +
+                    "LEFT JOIN MpaRatings r ON r.id = m.ratingId " +
+                    "LEFT JOIN filmsGenres fg ON fg.filmId = f.id " +
+                    "LEFT JOIN genres g ON g.id = fg.genreId;";
     private static final String ADD_LIKE =
             "INSERT INTO likes(userId, filmId) " +
                     "VALUES (?, ?);";
@@ -66,10 +95,6 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
                     "GROUP BY filmId " +
                     "ORDER BY COUNT(*) DESC " +
                     "LIMIT ?;";
-
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
-        super(jdbc, mapper);
-    }
 
     @Override
     public Film addFilm(Film newFilm) {
@@ -88,7 +113,7 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
         List<Object[]> batchedFilmIdGenreIds = new ArrayList<>();
         if (!genres.isEmpty()) {
             for (Genre genre : genres) {
-                if (!genreExists(genre.getId())) {
+                if (!genreStorage.genreExists(genre.getId())) {
                     throw new NoSuchElementException("Жанра с ID=" + genre.getId() + " нет в БД.");
                 }
                 batchedFilmIdGenreIds.add(new Object[]{filmId, genre.getId()});
@@ -130,24 +155,57 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> getAllFilms() {
-        List<Film> films = findMany(GET_ALL_FILMS);
+        List<Film> films = findMany(GET_ALL_FILMS_WITH_RATING);
+        Map<Integer, Film> filmsMap = new LinkedHashMap<>();
+
         for (Film film : films) {
-            film.setMpa(getFilmMpaRating(film.getId()));
-            film.setGenres(getFilmGenres(film.getId()));
+            Film existingFilm = filmsMap.get(film.getId());
+
+            if (existingFilm == null) {
+                filmsMap.put(film.getId(), film);
+            } else {
+                if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+                    existingFilm.getGenres().addAll(film.getGenres());
+                }
+            }
         }
         return films;
     }
 
     @Override
     public Optional<Film> getFilmById(int filmId) {
-        Optional<Film> optFilm = findOne(GET_FILM_BY_ID, filmId);
-        if (optFilm.isEmpty()) {
-            return optFilm;
+        List<Film> rawFilms = findMany(GET_FILM_BY_ID, filmId);
+
+        if (rawFilms.isEmpty()) {
+            return Optional.empty();
         }
-        Film film = optFilm.get();
-        film.setMpa(getFilmMpaRating(film.getId()));
-        film.setGenres(getFilmGenres(film.getId()));
+
+        Film film = rawFilms.get(0);
+        for (int i = 1; i < rawFilms.size(); i++) {
+            Film nextFilm = rawFilms.get(i);
+            if (nextFilm.getGenres() != null && !nextFilm.getGenres().isEmpty()) {
+                film.getGenres().addAll(nextFilm.getGenres());
+            }
+        }
         return Optional.of(film);
+    }
+
+    @Override
+    public List<Film> getFilmsByIds(List<Integer> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String inClause = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        String sql = String.format(GET_FILMS_BY_IDS, inClause);
+
+        List<Film> films = findMany(sql, filmIds.toArray());
+
+        for (Film film : films) {
+            film.setGenres(getFilmGenres(film.getId()));
+        }
+
+        return films;
     }
 
     @Override
@@ -160,12 +218,6 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
     public boolean mpaRatingExists(int ratingId) {
         Integer numMpaFound = jdbc.queryForObject(CHECK_FOR_MPA_QUERY, Integer.class, ratingId);
         return numMpaFound > 0;
-    }
-
-    @Override
-    public boolean genreExists(int genreId) {
-        Integer numGenresFound = jdbc.queryForObject(CHECK_FOR_GENRE_QUERY, Integer.class, genreId);
-        return numGenresFound > 0;
     }
 
     @Override

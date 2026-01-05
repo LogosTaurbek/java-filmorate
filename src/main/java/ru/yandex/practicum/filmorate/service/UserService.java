@@ -13,7 +13,9 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,10 +29,19 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
+    /*
+        UserDto usrDto = UserMapper.mapToUserDto((optUser.get()));
+        usrDto.setFriends(userStorage.getUserFriends(id));
+     */
     public List<UserDto> getAllUsers() {
-        return this.userStorage.getAllUsers().stream()
-                .map(UserMapper::mapToUserDto)
+        List<UserDto> usrsDto = this.userStorage.getAllUsers().stream()
+                .map(user -> {
+                    UserDto userDto = UserMapper.mapToUserDto(user);
+                    userDto.setFriends(userStorage.getUserFriends(user.getId()));
+                    return userDto;
+                })
                 .collect(Collectors.toList());
+        return usrsDto;
     }
 
     public UserDto createUser(NewUserRequest newUser) {
@@ -59,9 +70,15 @@ public class UserService {
         return UserMapper.mapToUserDto(updatedUser);
     }
 
-    public User getUserById(int id) {
+    public UserDto getUserById(int id) {
         log.info("Получение пользователя с id = " + id);
-        return this.getUserByIdWithException(id);
+        Optional<User> optUser = userStorage.getUserById(id);
+        if (optUser.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с ID=" + id + "нет в БД.");
+        }
+        UserDto usrDto = UserMapper.mapToUserDto((optUser.get()));
+        usrDto.setFriends(userStorage.getUserFriends(id));
+        return usrDto;
     }
 
     public void addFriend(int user1Id, int user2Id) {
@@ -106,11 +123,11 @@ public class UserService {
         if (user1Id == user2Id) {
             throw new NoSuchElementException("Пользователи с id=" + user1Id + " одинаковые");
         }
-        Set<UserDto> friendsOfUser1 = new HashSet<>(this.getUserFriends(user1Id));
-        Set<UserDto> friendsOfUser2 = new HashSet<>(this.getUserFriends(user2Id));
-        friendsOfUser1.retainAll(friendsOfUser2);
-        return new ArrayList<>(friendsOfUser1);
+        return userStorage.getCommonFriends(user1Id, user2Id).stream()
+                .map(UserMapper::mapToUserDto)
+                .toList();
     }
+
 
     public List<UserDto> getUserFriends(int id) {
         log.info("Получение списка друзей пользователя с id = " + id);

@@ -6,11 +6,10 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Repository
-public class MpaDbStorage extends BaseBdStorage<Mpa> {
+public class MpaDbStorage extends BaseBdStorage<Mpa> implements MpaStorage {
     private static final String GET_MPA_RATING_BY_ID =
             "SELECT * FROM mpaRatings " +
                     "WHERE id = ?;";
@@ -21,12 +20,9 @@ public class MpaDbStorage extends BaseBdStorage<Mpa> {
         super(jdbc, mapper);
     }
 
-    public Mpa getMpaById(int mpaId) {
+    public Optional<Mpa> getMpaById(int mpaId) {
         Optional<Mpa> optMpa = findOne(GET_MPA_RATING_BY_ID, mpaId);
-        if (optMpa.isEmpty()) {
-            throw new NoSuchElementException("Рейтинга с id=" + mpaId + "не в БД");
-        }
-        return optMpa.get();
+        return optMpa;
     }
 
     public List<Mpa> getAllMpa() {

@@ -17,9 +17,10 @@ public interface FilmStorage {
 
     Optional<Film> getFilmById(int id);
 
+    List<Film> getFilmsByIds(List<Integer> filmIds);
+
     boolean mpaRatingExists(int ratingId);
 
-    boolean genreExists(int genreId);
 
     void addLike(int userId, int filmId);
 
