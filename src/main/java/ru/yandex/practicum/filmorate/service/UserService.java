@@ -1,8 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.exceptions.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exceptions.UserValidationException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -10,40 +16,65 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class UserService {
     public UserStorage userStorage;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage
+    ) {
         this.userStorage = userStorage;
     }
 
-    public List<User> getAllUsers() {
-        return this.userStorage.getAllUsers();
+    public List<UserDto> getAllUsers() {
+        List<UserDto> usrsDto = this.userStorage.getAllUsers().stream()
+                .map(user -> {
+                    UserDto userDto = UserMapper.mapToUserDto(user);
+                    userDto.setFriends(userStorage.getUserFriends(user.getId()));
+                    return userDto;
+                })
+                .collect(Collectors.toList());
+        return usrsDto;
     }
 
-    public User createUser(User newUser) {
-        validateUser(newUser);
-        log.info("Создание пользователя с именем = " + newUser.getName());
-        return this.userStorage.createUser(newUser);
-    }
-
-    public User updateUser(User updatedUser) throws NoSuchElementException {
-        log.info("Редактирование пользователя с id = " + updatedUser.getId());
-        if (!this.isUserExist(updatedUser.getId())) {
-            throw new NoSuchElementException("Пользователя с id=" + updatedUser.getId() + " нет в системе.");
-        } else {
-            validateUser(updatedUser);
-            return this.userStorage.updateUser(updatedUser);
+    public UserDto createUser(NewUserRequest newUser) {
+        NewUserRequest validatedRequest = validateUser(newUser);
+        log.info("Создание пользователя с именем = " + validatedRequest.getName());
+        Optional<User> userAlreadyExists = this.userStorage.getUserByEmail(validatedRequest.getEmail());
+        if (userAlreadyExists.isPresent()) {
+            throw new DuplicatedDataException("Данный имейл уже используется: " + validatedRequest.getEmail());
         }
+        userAlreadyExists = userStorage.getUserByLogin(validatedRequest.getLogin());
+        if (userAlreadyExists.isPresent()) {
+            throw new DuplicatedDataException("Данный логин уже используется: " + validatedRequest.getLogin());
+        }
+        User user = UserMapper.mapToUser(validatedRequest);
+        user = userStorage.createUser(user);
+        return UserMapper.mapToUserDto(user);
     }
 
-    public User getUserById(int id) {
+    public UserDto updateUser(UpdateUserRequest request) throws NoSuchElementException {
+        User updatedUser = userStorage.getUserById(request.getId())
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Пользователя с id=" + request.getId() + " нет в системе."
+                ));
+        updatedUser = userStorage.updateUser(updatedUser);
+        return UserMapper.mapToUserDto(updatedUser);
+    }
+
+    public UserDto getUserById(int id) {
         log.info("Получение пользователя с id = " + id);
-        return this.getUserByIdWithException(id);
+        Optional<User> optUser = userStorage.getUserById(id);
+        if (optUser.isEmpty()) {
+            throw new NoSuchElementException("Пользователя с ID=" + id + "нет в БД.");
+        }
+        UserDto usrDto = UserMapper.mapToUserDto((optUser.get()));
+        usrDto.setFriends(userStorage.getUserFriends(id));
+        return usrDto;
     }
 
     public void addFriend(int user1Id, int user2Id) {
@@ -58,7 +89,6 @@ public class UserService {
             throw new NoSuchElementException("Пользователи с id=" + user1Id + " одинаковые");
         } else {
             this.userStorage.addFriend(user1Id, user2Id);
-            this.userStorage.addFriend(user2Id, user1Id);
         }
     }
 
@@ -74,7 +104,6 @@ public class UserService {
             throw new NoSuchElementException("Пользователи с id=" + userId + " одинаковые");
         }
         this.userStorage.removeFriend(userId, friendId);
-        this.userStorage.removeFriend(friendId, userId);
     }
 
     public void removeUser(int userId) {
@@ -85,26 +114,26 @@ public class UserService {
         this.userStorage.removeUser(userId);
     }
 
-    public List<User> listCommonFriends(int user1Id, int user2Id) {
+    public List<UserDto> listCommonFriends(int user1Id, int user2Id) {
         log.info("Получение списка общих друзей пользователя с id = " + user1Id + " и пользователя с id = " + user2Id);
         if (user1Id == user2Id) {
             throw new NoSuchElementException("Пользователи с id=" + user1Id + " одинаковые");
         }
-        Set<Integer> friendsOfUser1 = this.getUserByIdWithException(user1Id).getFriendIds();
-        Set<Integer> friendsOfUser2 = this.getUserByIdWithException(user2Id).getFriendIds();
-        friendsOfUser1.retainAll(friendsOfUser2);
-        return friendsOfUser1
-                .stream()
-                .map(userId -> this.getUserByIdWithException(userId))
+        return userStorage.getCommonFriends(user1Id, user2Id).stream()
+                .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
-    public List<User> getUserFriends(int id) {
+
+    public List<UserDto> getUserFriends(int id) {
         log.info("Получение списка друзей пользователя с id = " + id);
-        return this.getUserByIdWithException(id)
-                .getFriendIds()
-                .stream()
-                .map(userId -> this.getUserByIdWithException(userId))
+        if (!this.isUserExist(id)) {
+            throw new NoSuchElementException(
+                    "Пользователя с id=" + id + " нет в системе."
+            );
+        }
+        return this.userStorage.getUserFriends(id).stream()
+                .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
@@ -115,7 +144,7 @@ public class UserService {
     }
 
     // Метод возвращает объект User, потому что в процессе валидации объект может измениться
-    public User validateUser(User user) throws UserValidationException {
+    public NewUserRequest validateUser(NewUserRequest user) throws UserValidationException {
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             log.error("Отсутствует адрес электронной почты. {}", user);
             throw new UserValidationException("Электронная почта не может быть пустой.");
