@@ -49,9 +49,18 @@ public class FilmService {
 
     public FilmDto addFilm(NewFilmRequest newFilmRequest) {
         validateFilm(newFilmRequest);
-        log.info("Добавлен фильм: {}", newFilmRequest);
+
+        log.info("Добавление фильма: {}", newFilmRequest);
         Film newFilm = FilmMapper.mapToFilm(newFilmRequest);
+
+        log.info("Добавлен фильм: {}", newFilmRequest);
         newFilm = filmStorage.addFilm(newFilm);
+        List<Object[]> batchedFilmIdGenreIds = getBatchedFilmIdsGenresIds(newFilm);
+
+        filmStorage.insertFilmsGenres(batchedFilmIdGenreIds);
+        if (newFilm.getMpa() != null) {
+            filmStorage.insertFilmsMpa(newFilm.getId(), newFilm.getMpa().getId());
+        }
         return FilmMapper.mapToFilmDto(newFilm);
     }
 
@@ -106,11 +115,33 @@ public class FilmService {
         log.info("Валидация фильма с названием = " + film.getName());
     }
 
+    public List<Object[]> getBatchedFilmIdsGenresIds(Film newFilm) {
+        log.info("Получение списка жанров фильма с ID=", newFilm.getId());
+        List<Genre> genres = new ArrayList<>();
+        if (newFilm.getGenres() != null) {
+            genres = new ArrayList<>(new LinkedHashSet<>(newFilm.getGenres()));
+        }
+
+        List<Object[]> batchedFilmIdGenreIds = new ArrayList<>();
+        if (!genres.isEmpty()) {
+            for (Genre genre : genres) {
+                if (!genreStorage.genreExists(genre.getId())) {
+                    throw new NoSuchElementException("Жанра с ID=" + genre.getId() + " нет в БД.");
+                }
+                batchedFilmIdGenreIds.add(new Object[]{newFilm.getId(), genre.getId()});
+            }
+        }
+        return batchedFilmIdGenreIds;
+    }
+
     public void addLike(int userId, int filmId) {
         log.info("Добавления лайка к фильму с id=" + filmId + " пользователем с id=" + userId);
         Optional<Film> optFilm = filmStorage.getFilmById(filmId);
         if (optFilm.isEmpty()) {
             throw new NoSuchElementException("Фильма с ID=" + filmId + "нет в БД.");
+        }
+        if (!userService.isUserExist(userId)) {
+            throw new NoSuchElementException("Пользователя с id=" + userId + " нет в системе.");
         }
         filmStorage.addLike(userId, filmId);
     }
@@ -120,6 +151,9 @@ public class FilmService {
         Optional<Film> optFilm = filmStorage.getFilmById(filmId);
         if (optFilm.isEmpty()) {
             throw new NoSuchElementException("Фильма с ID=" + filmId + "нет в БД.");
+        }
+        if (!userService.isUserExist(userId)) {
+            throw new NoSuchElementException("Пользователя с id=" + userId + " нет в системе.");
         }
         filmStorage.removeLike(userId, filmId);
     }

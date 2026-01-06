@@ -10,15 +10,14 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
 
-    private final GenreStorage genreStorage;
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreStorage genreStorage) {
         super(jdbc, mapper);
-        this.genreStorage = genreStorage;
     }
 
     private static final String INSERT_FILM_QUERY =
@@ -51,10 +50,13 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
                     "LEFT JOIN genres g ON g.id = fg.genreId " +
                     "WHERE f.id = ?;";
     private static final String GET_FILMS_BY_IDS =
-            "SELECT f.*, m.ratingId as mpa_id, r.id as rating_id, r.rating as rating_name " +
+            "SELECT f.*, m.ratingId as mpa_id, r.id as rating_id, r.rating as rating_name, " +
+                    "g.id as genre_id, g.genre as genre_name " +
                     "FROM films f " +
                     "LEFT JOIN filmsMpaRatings m ON m.filmId = f.id " +
                     "LEFT JOIN mpaRatings r ON r.id = m.ratingId " +
+                    "LEFT JOIN filmsGenres fg ON fg.filmId = f.id " +
+                    "LEFT JOIN genres g ON g.id = fg.genreId " +
                     "WHERE f.id IN (%s);";
     private static final String GET_MPA_RATING_BY_FILM_ID =
             "SELECT ratingId from filmsMpaRatings WHERE filmId = ?;";
@@ -106,24 +108,16 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
                 newFilm.getDuration()
         );
         newFilm.setId(filmId);
-        List<Genre> genres = new ArrayList<>();
-        if (newFilm.getGenres() != null) {
-            genres = new ArrayList<>(new LinkedHashSet<>(newFilm.getGenres()));
-        }
-        List<Object[]> batchedFilmIdGenreIds = new ArrayList<>();
-        if (!genres.isEmpty()) {
-            for (Genre genre : genres) {
-                if (!genreStorage.genreExists(genre.getId())) {
-                    throw new NoSuchElementException("Жанра с ID=" + genre.getId() + " нет в БД.");
-                }
-                batchedFilmIdGenreIds.add(new Object[]{filmId, genre.getId()});
-            }
-        }
-        jdbc.batchUpdate(INSERT_GENRE_QUERY, batchedFilmIdGenreIds);
-        if (newFilm.getMpa() != null) {
-            insertWithoutGeneratedId(INSERT_MPA_QUERY, filmId, newFilm.getMpa().getId());
-        }
+
         return newFilm;
+    }
+
+    public void insertFilmsGenres(List<Object[]> batchedFilmIdGenreIds) {
+        jdbc.batchUpdate(INSERT_GENRE_QUERY, batchedFilmIdGenreIds);
+    }
+
+    public void insertFilmsMpa(int filmId, int filmMpaId) {
+        insertWithoutGeneratedId(INSERT_MPA_QUERY, filmId, filmMpaId);
     }
 
     @Override
@@ -199,13 +193,26 @@ public class FilmDbStorage extends BaseBdStorage<Film> implements FilmStorage {
         String inClause = String.join(",", Collections.nCopies(filmIds.size(), "?"));
         String sql = String.format(GET_FILMS_BY_IDS, inClause);
 
-        List<Film> films = findMany(sql, filmIds.toArray());
+        List<Film> rawFilms = findMany(sql, filmIds.toArray());
 
-        for (Film film : films) {
-            film.setGenres(getFilmGenres(film.getId()));
+        if (rawFilms.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        return films;
+        Map<Integer, Film> filmsMap = rawFilms.stream()
+                .collect(Collectors.toMap(
+                        Film::getId,
+                        film -> film,
+                        (existing, newFilm) -> {
+                            if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
+                                existing.getGenres().addAll(newFilm.getGenres());
+                            }
+                            return existing;
+                        },
+                        LinkedHashMap::new
+                ));
+
+        return new ArrayList<>(filmsMap.values());
     }
 
     @Override

@@ -29,10 +29,6 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    /*
-        UserDto usrDto = UserMapper.mapToUserDto((optUser.get()));
-        usrDto.setFriends(userStorage.getUserFriends(id));
-     */
     public List<UserDto> getAllUsers() {
         List<UserDto> usrsDto = this.userStorage.getAllUsers().stream()
                 .map(user -> {

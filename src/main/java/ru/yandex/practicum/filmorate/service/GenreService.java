@@ -32,4 +32,6 @@ public class GenreService {
         log.info("Выведен весь список жанров");
         return genreStorage.getAllGenres();
     }
+
+
 }

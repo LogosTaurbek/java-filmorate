@@ -21,10 +21,13 @@ public interface FilmStorage {
 
     boolean mpaRatingExists(int ratingId);
 
-
     void addLike(int userId, int filmId);
 
     void removeLike(int userId, int filmId);
 
     List<Integer> getTopLikedFilmIds(int count);
+
+    void insertFilmsGenres(List<Object[]> batchedFilmIdGenreIds);
+
+    void insertFilmsMpa(int filmId, int genreId);
 }

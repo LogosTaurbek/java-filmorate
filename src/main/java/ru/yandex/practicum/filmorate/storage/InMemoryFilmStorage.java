@@ -61,6 +61,14 @@ public class InMemoryFilmStorage implements FilmStorage {
         return List.of();
     }
 
+    @Override
+    public void insertFilmsGenres(List<Object[]> batchedFilmIdGenreIds) {
+    }
+
+    @Override
+    public void insertFilmsMpa(int filmId, int genreId) {
+    }
+
     private int getNextId() {
         int nextId = this.currentId + 1;
         this.currentId = nextId;
